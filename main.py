@@ -34,6 +34,8 @@ DB_FILE = "spammers.db"  # Changed from JSON to SQLite
 
 app = FastAPI()
 
+PORT = os.getenv("PORT", 8000)
+
 # Models
 class Contact(BaseModel):
     name: str
@@ -737,4 +739,4 @@ async def verify_code(data: dict = Body(...)):
     
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="localhost", port=PORT)

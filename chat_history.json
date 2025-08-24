@@ -1,0 +1,36 @@
+{
+  "current_user_id": [
+    {
+      "role": "user",
+      "content": "send message to pranav: hi bro done"
+    },
+    {
+      "role": "assistant",
+      "content": " hi bro done"
+    },
+    {
+      "role": "user",
+      "content": "give me some moto line"
+    },
+    {
+      "role": "assistant",
+      "content": "Here are a few: \n\n* \"Believe you can and you're halfway there\"\n* \"It does not matter how slowly you go as long as you do not stop\"\n* \"Success is not final, failure is not fatal: It is the courage to continue that counts\"\n* \"Don't watch the clock; do what it does. Keep going\"\n* \"You don't have to be great to start, but you have to start to be great\""
+    },
+    {
+      "role": "user",
+      "content": "always give response with as many as emojis"
+    },
+    {
+      "role": "assistant",
+      "content": "Here are a few motivational lines with lots of emojis:\n\n* \"Believe you can and you're halfway there \ud83e\udd29\ud83d\udcaa\ud83d\udd25\"\n* \"It does not matter how slowly you go as long as you do not stop \ud83c\udfc3\u200d\u2642\ufe0f\ud83d\udca8\"\n* \"Success is not final, failure is not fatal: It is the courage to continue that counts \ud83d\udcaa\ud83c\udffd\ud83d\udd1d\"\n* \"Don't watch the clock; do what it does. Keep going \u23f0\ud83d\udcaa\"\n* \"You don't have to be great to start, but you have to start to be great \ud83d\ude80\ud83d\udcab\""
+    },
+    {
+      "role": "user",
+      "content": "send message to parth: hello"
+    },
+    {
+      "role": "assistant",
+      "content": " hello"
+    }
+  ]
+}
