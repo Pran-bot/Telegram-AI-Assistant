@@ -1,1 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700&display=swap');
+
+        :root {
+            --primary: #2563eb;
+            --secondary: #3b82f6;
+            --accent: #60a5fa;
+            --dark: #1e293b;
+            --darker: #0f172a;
+            --light: #f8fafc;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--darker);
+            color: var(--light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .circuit-pattern {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+        }
+
+        .tech-border {
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            position: relative;
+        }
+
+        .tech-border::before,
+        .tech-border::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 2px solid var(--accent);
+        }
+
+        .tech-border::before {
+            top: -5px;
+            left: -5px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .tech-border::after {
+            bottom: -5px;
+            right: -5px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .glow-effect {
+            box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline;
+        }
+
+        .input-field {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        .connect-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            transition: all 0.3s ease;
+        }
+
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .connect-btn:active {
+            transform: translateY(0);
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(96, 165, 250, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(96, 165, 250, 0);
+            }
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="circuit-pattern"></div>
+
+    <div class="w-full max-w-md mx-4">
+        <div class="bg-gray-900 bg-opacity-80 backdrop-blur-sm rounded-xl p-8 tech-border shadow-xl slide-up">
+            <!-- Logo and Title -->
+            <div class="flex flex-col items-center mb-8">
+                <div
+                    class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center mb-4 glow-effect pulse-animation">
+                    <i class="fas fa-robot text-white text-2xl"></i>
+                </div>
+                <h1
+                    class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300 font-['Orbitron'] tracking-wider">
+                    TELEGRAM CONNECT
+                </h1>
+                <p class="text-gray-400 text-sm mt-2">Connect your Telegram account to access AI assistant</p>
+            </div>
+
+            <!-- Phone Number Input -->
+            <div class="mb-6">
+                <label for="phone-number" class="block text-sm text-gray-400 mb-2">Phone Number</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                        +91
+                    </div>
+                    <input type="tel" id="phone-number"
+                        class="input-field w-full py-3 pl-12 pr-4 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="12345 67890" maxlength="15">
+                </div>
+            </div>
+
+            <!-- OTP Input (initially hidden) -->
+            <div id="otp-section" class="mb-6 hidden">
+                <label for="otp-code" class="block text-sm text-gray-400 mb-2">Verification Code</label>
+                <input type="text" id="otp-code"
+                    class="input-field w-full py-3 px-4 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter 5-digit code" maxlength="5">
+                <p class="text-xs text-gray-500 mt-2">
+                    We've sent a verification code to your phone. Please enter it above.
+                    <span id="resend-text" class="text-blue-400 cursor-pointer hover:underline">Resend code</span>
+                </p>
+            </div>
+
+            <!-- Connect Button -->
+            <button id="connect-btn"
+                class="connect-btn w-full py-3 px-4 text-white font-medium rounded-lg flex items-center justify-center">
+                <span id="connect-text">Connect Telegram</span>
+                <i class="fas fa-paper-plane ml-2"></i>
+            </button>
+
+            <!-- Status Message -->
+            <div id="status-message" class="mt-4 text-sm text-center hidden">
+                <p id="status-text" class="inline-flex items-center">
+                    <span class="status-indicator bg-green-500 animate-pulse"></span>
+                    <span id="status-message-text" class="ml-2"></span>
+                </p>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-gray-800 text-center">
+                <p class="text-xs text-gray-500">
+                    By connecting, you agree to our <span
+                        class="text-blue-400 cursor-pointer hover:underline">Terms</span> and <span
+                        class="text-blue-400 cursor-pointer hover:underline">Privacy Policy</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const phoneInput = document.getElementById('phone-number');
+            const otpSection = document.getElementById('otp-section');
+            const connectBtn = document.getElementById('connect-btn');
+            const connectText = document.getElementById('connect-text');
+            const statusMessage = document.getElementById('status-message');
+            const statusText = document.getElementById('status-message-text');
+            const resendText = document.getElementById('resend-text');
+
+            let isPhoneSubmitted = false;
+
+            // Add these variables at the top
+            let currentPhoneNumber = '';
+            let currentPhoneCodeHash = '';
+
+            // Format phone number as user types
+            phoneInput.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                let formattedValue = '';
+
+                if (value.length > 0) {
+                    formattedValue = value.substring(0, 5);
+                    if (value.length > 5) {
+                        formattedValue += ' ' + value.substring(5, 8);
+                    }
+                    if (value.length > 8) {
+                        formattedValue += ' ' + value.substring(8, 12);
+                    }
+                }
+
+                e.target.value = formattedValue;
+            });
+
+            // Connect button click handler
+            connectBtn.addEventListener('click', async function () {
+                if (!isPhoneSubmitted) {
+                    const phoneNumber = "+91" + phoneInput.value.replace(/\D/g, '');
+
+                    if (phoneNumber.length < 12) {
+                        showStatus("Please enter a valid phone number", "red");
+                        return;
+                    }
+
+                    // Show loading state
+                    connectBtn.disabled = true;
+                    connectText.textContent = "Sending code...";
+
+                    try {
+                        // Check if already authenticated
+                        const authCheck = await fetch('/api/auth/check');
+                        const authResult = await authCheck.json();
+
+                        if (authResult.is_authenticated) {
+                            showStatus("Already authenticated with Telegram", "green");
+                            connectBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Connected';
+                            connectBtn.classList.add('bg-green-600');
+                            return;
+                        }
+
+                        // Call backend to request code
+                        const response = await fetch('/api/auth/request-code', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                phone_number: phoneNumber,
+                                user_id: "default"
+                            })
+                        });
+
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.message || "Failed to send code");
+                        }
+
+                        const result = await response.json();
+
+                        otpSection.classList.remove('hidden');
+                        phoneInput.disabled = true;
+                        document.getElementById('otp-code').focus();
+
+                        // Store the phone code hash for verification
+                        currentPhoneCodeHash = result.phone_code_hash;
+                        currentPhoneNumber = phoneNumber;
+
+                        connectBtn.disabled = false;
+                        connectText.textContent = "Verify Code";
+                        isPhoneSubmitted = true;
+
+                        showStatus("Verification code sent to " + phoneNumber, "green");
+                    } catch (error) {
+                        showStatus(error.message, "red");
+                        connectBtn.disabled = false;
+                        connectText.textContent = "Connect Telegram";
+                    }
+                } else {
+                    const otp = document.getElementById('otp-code').value.trim();
+
+                    if (!otp || otp.length < 5) {
+                        showStatus("Please enter the 5-digit code", "red");
+                        return;
+                    }
+
+                    // Show connecting state
+                    connectBtn.disabled = true;
+                    connectText.textContent = "Verifying...";
+
+                    try {
+                        // Call backend to verify code
+                        const response = await fetch('/api/auth/verify-code', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                phone_number: currentPhoneNumber,
+                                code: otp,
+                                phone_code_hash: currentPhoneCodeHash,
+                                user_id: "default"
+                            })
+                        });
+
+                        // if (response.status === 202) {
+                        //     // 2FA required
+                        //     handle2FAPrompt();
+                        // } else if (!response.ok) {
+                        //     const error = await response.json();
+                        //     throw new Error(error.message || "Verification failed");
+                        // } else {
+                        //     handleSuccessfulAuth();
+                        // }
+
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.message || "Verification failed");
+                        }
+
+                        handleSuccessfulAuth();
+
+                    } catch (error) {
+                        showStatus(error.message, "red");
+                        connectBtn.disabled = false;
+                        connectText.textContent = "Verify Code";
+                    }
+                }
+            });
+
+            // function handle2FAPrompt() {
+            //     showStatus("Two-factor authentication required", "blue");
+
+            //     // Show 2FA input
+            //     const twoFaSection = document.createElement('div');
+            //     twoFaSection.id = '2fa-section';
+            //     twoFaSection.className = 'mb-6';
+            //     twoFaSection.innerHTML = `
+            //         <label for="2fa-password" class="block text-sm text-gray-400 mb-2">2FA Password</label>
+            //         <input 
+            //             type="password" 
+            //             id="2fa-password" 
+            //             class="input-field w-full py-3 px-4 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+            //             placeholder="Enter your 2FA password"
+            //         >
+            //     `;
+            //     otpSection.after(twoFaSection);
+
+            //     // Remove all old click listeners and attach new 2FA handler
+            //     const newBtn = connectBtn.cloneNode(true); // duplicate button without old listeners
+            //     newBtn.id = connectBtn.id;                 // preserve id
+            //     connectBtn.parentNode.replaceChild(newBtn, connectBtn); // replace old button
+            //     connectBtn = newBtn;                       // update reference
+            //     connectBtn.addEventListener('click', handle2FASubmit);
+
+            //     connectBtn.disabled = false;
+            //     connectText.textContent = "Verify 2FA";
+            // }
+
+            // async function handle2FASubmit() {
+            //     const password = document.getElementById('2fa-password').value;
+
+            //     if (!password) {
+            //         showStatus("Please enter your 2FA password", "red");
+            //         return;
+            //     }
+
+            //     connectBtn.disabled = true;
+            //     connectText.textContent = "Verifying 2FA...";
+
+            //     try {
+            //         const response = await fetch('/api/auth/verify-2fa', {
+            //             method: 'POST',
+            //             headers: {
+            //                 'Content-Type': 'application/json'
+            //             },
+            //             body: JSON.stringify({
+            //                 phone_number: currentPhoneNumber,
+            //                 password: password,
+            //                 user_id: "default"
+            //             })
+            //         });
+
+            //         if (!response.ok) {
+            //             const error = await response.json();
+            //             throw new Error(error.message || "Invalid 2FA password");
+            //         }
+
+            //         handleSuccessfulAuth();
+            //     } catch (error) {
+            //         showStatus(error.message, "red");
+            //         connectBtn.disabled = false;
+            //     }
+            // }
+
+            // function handleSuccessfulAuth() {
+            //     showStatus("Successfully connected to Telegram!", "green");
+            //     connectBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Connected';
+            //     connectBtn.classList.add('bg-green-600');
+
+            //     // Redirect after 2 seconds
+            //     setTimeout(() => {
+            //         window.location.href = "/telechat.html"; // Or your dashboard
+            //     }, 2000);
+            // }
+
+            function handleSuccessfulAuth() {
+                // ✅ Redirect after OTP verification
+                window.location.href = "/ai-chat";  // change to your dashboard route
+            }
+
+        })
+
+
+    </script>
+</body>
+
+</html>

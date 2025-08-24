@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700&display=swap');
+
+        :root {
+            --primary: #2563eb;
+            --secondary: #3b82f6;
+            --accent: #60a5fa;
+            --dark: #1e293b;
+            --darker: #0f172a;
+            --light: #f8fafc;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--darker);
+            color: var(--light);
+            overflow: hidden;
+            margin-bottom: 100px;
+        }
+
+        .sidebar-btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .sidebar-btn:hover::before {
+            left: 100%;
+        }
+
+        .sidebar-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.5);
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-message {
+            background: linear-gradient(135deg, var(--dark), #334155);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .glow-effect {
+            box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+        }
+
+        .circuit-pattern {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+        }
+
+        .tech-border {
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            position: relative;
+        }
+
+        .tech-border::before,
+        .tech-border::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 2px solid var(--accent);
+        }
+
+        .tech-border::before {
+            top: -5px;
+            left: -5px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .tech-border::after {
+            bottom: -5px;
+            right: -5px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(96, 165, 250, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(96, 165, 250, 0);
+            }
+        }
+
+        /* Contact Management Styles */
+        .contact-card {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .contact-card:hover {
+            background-color: rgba(30, 58, 138, 0.3);
+            border-left-color: var(--accent);
+        }
+
+        .contact-card.favorite {
+            border-left-color: gold;
+        }
+
+        .contacts-container {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .contact-actions {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .contact-card:hover .contact-actions {
+            opacity: 1;
+        }
+
+        .favorite-btn {
+            color: gold;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-content {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Chat list styles */
+        .chat-list-item {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .chat-list-item:hover {
+            background-color: rgba(30, 58, 138, 0.3);
+            border-left-color: var(--accent);
+        }
+
+        .chat-list-item.active {
+            background-color: rgba(30, 58, 138, 0.5);
+            border-left-color: var(--primary);
+        }
+
+        .ai-toolbar {
+            background: linear-gradient(90deg, rgba(30, 58, 138, 0.7), rgba(37, 99, 235, 0.7));
+            backdrop-filter: blur(5px);
+        }
+
+        .ai-suggestion {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .ai-suggestion:hover {
+            background: rgba(30, 64, 175, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .ai-generate-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            transition: all 0.2s ease;
+        }
+
+        .ai-generate-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.5);
+        }
+
+        /* Animation styles */
+        .slide-in {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .slide-out {
+            animation: slideOut 0.3s ease-in forwards;
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Spam alert styles */
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+
+        #spam-alerts-container {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        /* Add to your existing styles */
+        .listening {
+            color: red !important;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+
+        .channel-button {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .channel-button:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-left-color: var(--accent);
+            transform: translateX(2px);
+        }
+
+        .channel-button i {
+            transition: transform 0.2s ease;
+        }
+
+        .channel-button:hover i {
+            transform: translateX(2px);
+        }
+
+        .channel-result {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .channel-result:hover {
+            border-left-color: var(--accent);
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        .copy-btn {
+            transition: all 0.1s ease;
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+    </link>
+
+<body class="h-screen flex">
+    <!-- Circuit pattern background -->
+    <div class="circuit-pattern"></div>
+
+    <!-- Sidebar -->
+    <div class="w-20 h-full bg-gray-900 bg-opacity-80 backdrop-blur-sm flex flex-col items-center py-6 tech-border">
+        <!-- Logo -->
+        <div
+            class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center mb-8 glow-effect pulse-animation">
+            <i class="fas fa-robot text-white text-xl"></i>
+        </div>
+
+        <!-- Navigation buttons -->
+        <div class="flex flex-col items-center space-y-6 w-full px-2">
+            <button id="chats-btn"
+                class="sidebar-btn active w-14 h-14 rounded-xl flex flex-col items-center justify-center text-white bg-gray-800 hover:bg-gray-700 transition-all duration-300">
+                <i class="fas fa-comments text-xl mb-1"></i>
+                <span class="text-xs mt-1">Chats</span>
+            </button>
+
+            <button id="ai-chat-btn"
+                class="sidebar-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center text-white bg-gray-800 hover:bg-gray-700 transition-all duration-300">
+                <i class="fas fa-brain text-xl mb-1"></i>
+                <span class="text-xs mt-1">AI Chat</span>
+            </button>
+
+            <button id="contacts-btn"
+                class="sidebar-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center text-white bg-gray-800 hover:bg-gray-700 transition-all duration-300">
+                <i class="fas fa-address-book text-xl mb-1"></i>
+                <span class="text-xs mt-1">Contacts</span>
+            </button>
+
+            <button id="spam-alerts-btn"
+                class="sidebar-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center text-white bg-gray-800 hover:bg-gray-700 transition-all duration-300">
+                <i class="fas fa-shield-alt text-xl mb-1"></i>
+                <span class="text-xs mt-1">Spam</span>
+            </button>
+
+            <button id="logoutBtn"
+                class="sidebar-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center text-white bg-gray-800 hover:bg-gray-700 transition-all duration-300">
+                <i class="fas fa-sign-out-alt text-xl mb-1"></i>
+                <span class="text-xs mt-1">Logout</span>
+            </button>
+
+        </div>
+
+        <!-- Bottom spacer -->
+        <div class="flex-grow"></div>
+
+        <!-- User profile -->
+        <div
+            class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center mt-auto cursor-pointer hover:bg-gray-600 transition">
+            <i class="fas fa-user text-gray-300"></i>
+        </div>
+    </div>
+
+    <!-- Main content area -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+        <!-- Header -->
+        <div class="h-16 bg-gray-900 bg-opacity-70 backdrop-blur-sm flex items-center px-6 border-b border-gray-800">
+            <h1
+                class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300 font-['Orbitron'] tracking-wider">
+                TELEGRAM AI ASSISTANT
+            </h1>
+            <div class="flex items-center space-x-4 ml-auto">
+                <!-- Add refresh button here -->
+                <button id="refresh-messages" class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 transition">
+                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                </button>
+                <div class="flex items-center space-x-4">
+                    <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse hidden" id="spam-indicator"></div>
+                </div>
+                <div class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="text-sm text-gray-400">AI Connected</span>
+            </div>
+        </div>
+
+        <!-- Chat container (default view) -->
+        <div id="chat-view" class="flex-1 flex flex-col h-full">
+            <!-- Chat messages container -->
+            <div id="chat-container" class="flex-1 overflow-y-auto p-6 space-y-4">
+                <!-- AI welcome message -->
+                <div class="message-bubble ai-message p-4 text-white">
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
+                            <i class="fas fa-robot text-blue-400"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-blue-300 mb-1">Telegram AI</div>
+                            <p>Hello! I'm your Telegram AI Assistant. How can I help you today?</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input area -->
+            <div class="p-4 bg-gray-900 bg-opacity-70 backdrop-blur-sm border-t border-gray-800">
+                <div class="flex items-center">
+                    <div class="flex-1 relative">
+                        <input id="message-input" type="text"
+                            placeholder="Type a message or 'find channel to download [movie]'..."
+                            class="w-full bg-gray-800 text-white px-4 py-3 rounded-xl pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <div class="absolute right-3 top-3 flex space-x-2">
+                            <button class="text-gray-400 hover:text-blue-400 transition">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <button id="mic-button" class="text-gray-400 hover:text-blue-400 transition">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="send-button"
+                        class="ml-3 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 text-white flex items-center justify-center hover:opacity-90 transition">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+
+                <div class="mt-2 text-xs text-gray-500 flex items-center">
+                    <div id="typing-indicator" class="typing-indicator mr-2 hidden">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span id="status-text">Telegram AI is ready to assist</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contacts view (hidden by default) -->
+        <div id="contacts-view" class="hidden flex-1 overflow-y-auto p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300">
+                    Your Contacts
+                </h2>
+                <button id="add-contact-btn"
+                    class="px-4 py-2 rounded-lg bg-gradient-to-br from-blue-600 to-blue-500 text-white flex items-center">
+                    <i class="fas fa-user-plus mr-2"></i> Add Contact
+                </button>
+            </div>
+
+            <div class="bg-gray-800 rounded-lg p-4">
+                <div class="relative mb-4">
+                    <input id="contacts-search" type="text" placeholder="Search contacts..."
+                        class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+
+                <div id="contacts-list" class="contacts-container space-y-2">
+                    <!-- Contacts will be loaded here dynamically -->
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-users text-4xl mb-2"></i>
+                        <p>Loading contacts...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Chat view (hidden by default) -->
+        <!-- AI Chat view (hidden by default) -->
+        <div id="ai-chat-view" class="hidden flex-1 flex flex-col h-full">
+            <!-- Header with back button -->
+            <div
+                class="h-16 bg-gray-900 bg-opacity-70 backdrop-blur-sm flex items-center px-4 border-b border-gray-800">
+                <button id="back-to-main" class="mr-3 text-gray-400 hover:text-white">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300">
+                    Telegram AI Replies
+                </h2>
+            </div>
+
+            <!-- Main content area with two columns -->
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Left column - Message list -->
+                <div class="w-1/3 border-r border-gray-800 flex flex-col">
+                    <!-- Search bar -->
+                    <div class="p-3 border-b border-gray-800">
+                        <div class="relative">
+                            <input type="text" id="telegram-search" placeholder="Search messages..."
+                                class="w-full bg-gray-800 text-white px-4 py-2 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- Message list container -->
+                    <div id="telegram-message-list" class="flex-1 overflow-y-auto">
+                        <!-- Messages will be loaded here dynamically -->
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-comments text-2xl mb-2"></i>
+                            <p>Loading Telegram messages...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right column - Message details and reply -->
+                <div class="flex-1 flex flex-col">
+                    <!-- Message display area -->
+                    <div id="telegram-message-detail" class="flex-1 overflow-y-auto p-4 hidden">
+                        <!-- Message header -->
+                        <div class="flex items-center mb-4">
+                            <div id="message-sender-avatar"
+                                class="w-10 h-10 rounded-full bg-blue-500 mr-3 flex items-center justify-center">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <div id="message-sender-name" class="font-bold"></div>
+                                <div id="message-time" class="text-xs text-gray-400"></div>
+                            </div>
+                        </div>
+
+                        <!-- Message content -->
+                        <div id="message-content" class="bg-gray-800 rounded-lg p-4 mb-4"></div>
+
+                        <!-- AI Reply Section -->
+                        <div class="bg-gray-900 bg-opacity-50 rounded-lg p-4 mb-4">
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-purple-500 mr-2 flex items-center justify-center">
+                                    <i class="fas fa-robot text-white"></i>
+                                </div>
+                                <h3 class="font-bold text-purple-300">AI Reply Suggestions</h3>
+                            </div>
+                            <div id="ai-suggestions" class="space-y-2 mb-4">
+                                <!-- Suggestions will appear here -->
+                            </div>
+                            <textarea id="reply-textarea"
+                                class="w-full bg-gray-800 text-white px-3 py-2 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Type your reply or select a suggestion..." rows="3"></textarea>
+                            <div class="flex justify-end space-x-2">
+                                <button id="regenerate-reply-btn"
+                                    class="px-3 py-1 bg-gray-700 rounded-lg hover:bg-gray-600">
+                                    <i class="fas fa-sync-alt mr-1"></i> Regenerate
+                                </button>
+                                <button id="send-reply-btn" class="px-3 py-1 bg-blue-600 rounded-lg hover:bg-blue-500">
+                                    <i class="fas fa-paper-plane mr-1"></i> Send Reply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Empty state -->
+                    <div id="telegram-empty-state" class="flex-1 flex items-center justify-center">
+                        <div class="text-center text-gray-500">
+                            <i class="fas fa-comment-slash text-4xl mb-4"></i>
+                            <p>Select a message to view and reply</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spam Alerts view (hidden by default) -->
+        <div id="spam-alerts-view" class="hidden flex-1 overflow-y-auto p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-300">
+                    Spam Alerts
+                </h2>
+                <button id="refresh-spam-alerts"
+                    class="px-4 py-2 rounded-lg bg-gradient-to-br from-blue-600 to-blue-500 text-white">
+                    <i class="fas fa-sync-alt mr-2"></i> Refresh
+                </button>
+            </div>
+            <div id="spam-alerts-container" class="space-y-3">
+                <!-- Alerts will load here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Management Modal -->
+    <div id="contact-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-gray-800 rounded-lg p-6 w-96 modal-content">
+            <h3 class="text-xl font-bold mb-4" id="contact-modal-title">Add New Contact</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Contact Name</label>
+                    <input id="contact-name" type="text"
+                        class="w-full bg-gray-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Telegram ID</label>
+                    <input id="telegram-id" type="text"
+                        class="w-full bg-gray-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-center">
+                    <input id="contact-favorite" type="checkbox" class="mr-2 h-4 w-4 rounded focus:ring-blue-500">
+                    <label class="text-sm text-gray-400">Favorite</label>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Notes</label>
+                    <textarea id="contact-notes"
+                        class="w-full bg-gray-700 rounded px-3 py-2 h-20 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancel-contact"
+                        class="px-4 py-2 rounded bg-gray-600 hover:bg-gray-500 transition">Cancel</button>
+                    <button id="save-contact"
+                        class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 transition">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const chatView = document.getElementById('chat-view');
+        const contactsView = document.getElementById('contacts-view');
+        const aiChatView = document.getElementById('ai-chat-view');
+        const spamAlertsView = document.getElementById('spam-alerts-view');
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const statusText = document.getElementById('status-text');
+
+        // Navigation buttons
+        const chatsBtn = document.getElementById('chats-btn');
+        const aiChatBtn = document.getElementById('ai-chat-btn');
+        const contactsBtn = document.getElementById('contacts-btn');
+        const spamAlertsBtn = document.getElementById('spam-alerts-btn');
+
+        // Contact Management Elements
+        const contactModal = document.getElementById('contact-modal');
+        const addContactBtn = document.getElementById('add-contact-btn');
+        const cancelContactBtn = document.getElementById('cancel-contact');
+        const saveContactBtn = document.getElementById('save-contact');
+        const contactModalTitle = document.getElementById('contact-modal-title');
+        const contactsList = document.getElementById('contacts-list');
+        const contactsSearch = document.getElementById('contacts-search');
+
+        // Contact Form Elements
+        const contactNameInput = document.getElementById('contact-name');
+        const telegramIdInput = document.getElementById('telegram-id');
+        const contactFavoriteInput = document.getElementById('contact-favorite');
+        const contactNotesInput = document.getElementById('contact-notes');
+
+        // Spam Alert Elements
+        const spamAlertsContainer = document.getElementById('spam-alerts-container');
+        const refreshSpamAlertsBtn = document.getElementById('refresh-spam-alerts');
+        const spamCounter = document.getElementById('spam-counter');
+        const spamIndicator = document.getElementById('spam-indicator');
+
+
+        const telegramMessageList = document.getElementById('telegram-message-list');
+        const telegramMessageDetail = document.getElementById('telegram-message-detail');
+        const telegramEmptyState = document.getElementById('telegram-empty-state');
+        const messageSenderName = document.getElementById('message-sender-name');
+        const messageSenderAvatar = document.getElementById('message-sender-avatar');
+        const messageTime = document.getElementById('message-time');
+        const messageContent = document.getElementById('message-content');
+        const aiSuggestions = document.getElementById('ai-suggestions');
+        const replyTextarea = document.getElementById('reply-textarea');
+        const sendReplyBtn = document.getElementById('send-reply-btn');
+        const regenerateReplyBtn = document.getElementById('regenerate-reply-btn');
+        const logoutBtn = document.getElementById("logoutBtn");
+
+
+        // State
+        let currentContact = null;
+        let allContacts = {};
+        let chatHistory = [];
+
+        // Telegram Message Handling
+        let currentTelegramMessage = null;
+        let telegramSocket = null;
+
+        let recognition;
+        let isListening = false;
+
+
+        function updateMessageStatus(messageId, isOutgoing) {
+            const messageElements = document.querySelectorAll('#telegram-message-list > div');
+            messageElements.forEach(element => {
+                if (element.dataset.messageId === messageId.toString()) {
+                    if (isOutgoing) {
+                        element.classList.add('bg-gray-900');
+                        const icon = element.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('fa-robot');
+                            icon.classList.add('fa-user');
+                        }
+                    }
+                }
+            });
+        }
+
+        function initTelegramWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            telegramSocket = new WebSocket(`${protocol}${window.location.host}/ws/telegram`);
+
+            telegramSocket.onopen = () => {
+                console.log('Connected to Telegram WebSocket');
+            };
+
+            telegramSocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'reply_sent') {
+                    showNotification('Reply sent successfully!');
+                    updateMessageStatus(data.message_id, true);
+                }
+                else if (data.type === 'ai_reply_updated') {
+                    if (currentTelegramMessage && currentTelegramMessage.message_id === data.message_id) {
+                        updateAiSuggestions(data.ai_reply);
+                        showNotification('New reply generated!');
+                    }
+                }
+                else if (data.type === 'error') {
+                    showNotification(data.message, 'error');
+                }
+            };
+
+            telegramSocket.onerror = (error) => {
+                console.error('Telegram WebSocket error:', error);
+            };
+
+            telegramSocket.onclose = () => {
+                console.log('Telegram WebSocket connection closed');
+                // Try to reconnect after 5 seconds
+                setTimeout(initTelegramWebSocket, 5000);
+            };
+        }
+
+
+        function loadMessageHistory(messages) {
+            telegramMessageList.innerHTML = '';
+
+            if (messages.length === 0) {
+                telegramMessageList.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-inbox text-2xl mb-2"></i>
+                        <p>No messages yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            messages.forEach(msg => {
+                addTelegramMessageToList(msg);
+            });
+        }
+
+
+        function addTelegramMessageToList(message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `p-3 border-b border-gray-800 cursor-pointer hover:bg-gray-800 ${message.is_outgoing ? 'bg-gray-900' : ''}`;
+            messageElement.dataset.messageId = message.message_id;
+            messageElement.innerHTML = `
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full ${message.is_outgoing ? 'bg-blue-500' : 'bg-purple-500'} mr-2 flex items-center justify-center">
+                        <i class="fas fa-${message.is_outgoing ? 'user' : 'robot'} text-white"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-medium truncate">${message.sender || 'Unknown'}</div>
+                        <div class="text-sm text-gray-400 truncate">${message.message}</div>
+                    </div>
+                    <div class="text-xs text-gray-500 ml-2">
+                        ${new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                </div>
+            `;
+
+            messageElement.addEventListener('click', () => {
+                showMessageDetail(message);
+            });
+
+            telegramMessageList.prepend(messageElement);
+        }
+
+
+
+        function showMessageDetail(message) {
+            currentTelegramMessage = message;
+
+            // Update UI
+            messageSenderName.textContent = message.sender || 'Unknown';
+            messageTime.textContent = new Date(message.timestamp).toLocaleString();
+            messageContent.textContent = message.message;
+
+            // Set avatar color based on sender
+            const avatarColors = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-yellow-500'];
+            const colorIndex = Math.abs(hashCode(message.sender)) % avatarColors.length;
+            messageSenderAvatar.className = `w-10 h-10 rounded-full ${avatarColors[colorIndex]} mr-3 flex items-center justify-center`;
+            messageSenderAvatar.innerHTML = `<i class="fas fa-user text-white"></i>`;
+
+            // Update AI suggestions
+            updateAiSuggestions(message.ai_reply || "Generating suggestions...");
+
+            // Show/hide panels
+            telegramMessageDetail.classList.remove('hidden');
+            telegramEmptyState.classList.add('hidden');
+
+            // Focus reply textarea
+            replyTextarea.focus();
+        }
+
+        // Update AI suggestions
+        function updateAiSuggestions(aiReply) {
+            aiSuggestions.innerHTML = '';
+
+            // Split the AI reply into multiple suggestions
+            const suggestions = [
+                aiReply,
+                "I'll get back to you on this soon.",
+                "Thanks for your message! Let me check and reply.",
+                "Can you provide more details about this?"
+            ];
+
+            suggestions.forEach((suggestion, index) => {
+                const suggestionElement = document.createElement('div');
+                suggestionElement.className = 'bg-gray-800 rounded-lg p-2 text-sm cursor-pointer hover:bg-gray-700';
+                suggestionElement.textContent = suggestion;
+                suggestionElement.addEventListener('click', () => {
+                    replyTextarea.value = suggestion;
+                    replyTextarea.focus();
+                });
+                aiSuggestions.appendChild(suggestionElement);
+            });
+        }
+        // Helper function for consistent avatar colors
+        function hashCode(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return hash;
+        }
+
+        // Event listeners
+        sendReplyBtn.addEventListener('click', sendReply);
+        regenerateReplyBtn.addEventListener('click', regenerateReply);
+        document.getElementById('back-to-main').addEventListener('click', () => {
+            document.getElementById('ai-chat-view').classList.add('hidden');
+            document.getElementById('chat-view').classList.remove('hidden');
+        });
+
+        // Send reply to Telegram
+        async function sendReply() {
+            if (!currentTelegramMessage || !replyTextarea.value.trim()) return;
+
+            const message = {
+                action: 'send_reply',
+                message_id: currentTelegramMessage.message_id,
+                reply: replyTextarea.value.trim()
+            };
+
+            // Send via WebSocket
+            if (telegramSocket && telegramSocket.readyState === WebSocket.OPEN) {
+                telegramSocket.send(JSON.stringify(message));
+                replyTextarea.value = '';
+                showNotification('Reply sent!');
+            } else {
+                showNotification('Error: Connection to server lost', 'error');
+            }
+        }
+
+        async function regenerateReply() {
+            console.log('regenerateReply called');
+
+            if (!currentTelegramMessage) {
+                showNotification('No message selected', 'error');
+                console.error('No current telegram message');
+                return;
+            }
+
+            console.log('Regenerating reply for message:', currentTelegramMessage.message_id);
+
+            const message = {
+                action: 'regenerate_ai',
+                message_id: currentTelegramMessage.message_id
+            };
+
+            // Check WebSocket connection
+            if (!telegramSocket) {
+                showNotification('WebSocket not initialized', 'error');
+                console.error('telegramSocket is null');
+                return;
+            }
+
+            if (telegramSocket.readyState !== WebSocket.OPEN) {
+                showNotification('Connection to server lost. Reconnecting...', 'error');
+                console.error('WebSocket not open, state:', telegramSocket.readyState);
+                initTelegramWebSocket();
+                return;
+            }
+
+            try {
+                telegramSocket.send(JSON.stringify(message));
+                console.log('Regenerate message sent to WebSocket:', message);
+                showNotification('Generating new reply...');
+
+                // Disable the regenerate button temporarily
+                if (regenerateReplyBtn) {
+                    regenerateReplyBtn.disabled = true;
+                    setTimeout(() => {
+                        regenerateReplyBtn.disabled = false;
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Error regenerating reply:', error);
+                showNotification('Error regenerating reply: ' + error.message, 'error');
+                if (regenerateReplyBtn) regenerateReplyBtn.disabled = false;
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initTelegramWebSocket();
+        });
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initTelegramWebSocket();
+        });
+
+
+
+        function setupSpeechRecognition() {
+            // Check if browser supports speech recognition
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    isListening = true;
+                    document.getElementById('status-text').textContent = "Listening... Speak now";
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    messageInput.value = transcript;
+                    isListening = false;
+                    document.getElementById('status-text').textContent = "Telegram AI is ready to assist";
+                    sendMessage(); // Automatically send after recognition
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error', event.error);
+                    isListening = false;
+                    document.getElementById('status-text').textContent = "Error: " + event.error;
+                    setTimeout(() => {
+                        document.getElementById('status-text').textContent = "Telegram AI is ready to assist";
+                    }, 3000);
+                };
+
+                recognition.onend = () => {
+                    if (isListening) { // Only restart if we didn't get a result
+                        recognition.start();
+                    }
+                };
+            } else {
+                console.warn('Speech recognition not supported');
+                document.querySelector('.fa-microphone').parentElement.style.display = 'none';
+            }
+        }
+
+        // Add message to chat UI
+        function addMessage(sender, content, isCommandResponse = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message-bubble ${sender}-message p-4 text-white`;
+
+            if (sender === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="flex items-center justify-end">
+                        <div class="text-right mr-3">
+                            <div class="font-bold text-white mb-1">You</div>
+                            <p>${content}</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                    </div>
+                `;
+            } else {
+                if (isCommandResponse) {
+                    messageDiv.innerHTML = `
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
+                                <i class="fas fa-robot text-blue-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-blue-300 mb-1">Telegram AI</div>
+                                <p class="text-green-400">${content}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    messageDiv.innerHTML = `
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
+                                <i class="fas fa-robot text-blue-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-blue-300 mb-1">Telegram AI</div>
+                                <p>${content}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Navigation between views
+        function showView(view) {
+            chatView.classList.add('hidden');
+            contactsView.classList.add('hidden');
+            aiChatView.classList.add('hidden');
+            spamAlertsView.classList.add('hidden');
+
+            // Remove active class from all buttons
+            chatsBtn.classList.remove('active');
+            aiChatBtn.classList.remove('active');
+            contactsBtn.classList.remove('active');
+            spamAlertsBtn.classList.remove('active');
+
+            // Show selected view and set active button
+            if (view === 'chat') {
+                chatView.classList.remove('hidden');
+                chatsBtn.classList.add('active');
+            } else if (view === 'contacts') {
+                contactsView.classList.remove('hidden');
+                contactsBtn.classList.add('active');
+                loadContacts();
+            } else if (view === 'ai-chat') {
+                aiChatView.classList.remove('hidden');
+                aiChatBtn.classList.add('active');
+                // Load messages when entering the AI chat view
+                fetch('/api/messages')
+                    .then(response => response.json())
+                    .then(data => loadMessageHistory(data.messages))
+                    .catch(error => console.error('Error loading messages:', error));
+            } else if (view === 'spam-alerts') {
+                spamAlertsView.classList.remove('hidden');
+                spamAlertsBtn.classList.add('active');
+                loadSpamAlerts();
+            }
+        }
+
+        // Load and display contacts
+        async function loadContacts() {
+            try {
+                contactsList.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-spinner fa-spin text-4xl mb-2"></i>
+                        <p>Loading contacts...</p>
+                    </div>
+                `;
+
+                const response = await fetch('/api/contacts');
+                if (!response.ok) throw new Error('Failed to load contacts');
+
+                allContacts = await response.json();
+                renderContacts(allContacts);
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+                contactsList.innerHTML = `
+                    <div class="text-center py-8 text-red-400">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
+                        <p>Error loading contacts</p>
+                        <p class="text-sm mt-2">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render contacts to the UI
+        function renderContacts(contacts) {
+            contactsList.innerHTML = '';
+
+            if (Object.keys(contacts).length === 0) {
+                contactsList.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-users text-4xl mb-2"></i>
+                        <p>No contacts yet. Add your first contact!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort favorites first
+            const sortedContacts = Object.entries(contacts).sort((a, b) => {
+                if (a[1].is_favorite && !b[1].is_favorite) return -1;
+                if (!a[1].is_favorite && b[1].is_favorite) return 1;
+                return a[0].localeCompare(b[0]);
+            });
+
+            for (const [name, contact] of sortedContacts) {
+                const contactCard = document.createElement('div');
+                contactCard.className = `contact-card bg-gray-700 rounded-lg p-4 flex items-center justify-between ${contact.is_favorite ? 'favorite' : ''
+                    }`;
+                contactCard.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full ${contact.is_favorite ? 'bg-yellow-500' : 'bg-blue-500'
+                    } mr-3 flex items-center justify-center">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium truncate">${name}</div>
+                            <div class="text-sm text-gray-400 truncate">@${contact.telegram_id}</div>
+                            ${contact.notes ? `<div class="text-xs text-gray-500 mt-1 truncate">${contact.notes}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="contact-actions flex space-x-2 ml-3">
+                        <button class="edit-contact p-2 text-blue-400 hover:text-blue-300" data-name="${name}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-contact p-2 text-red-400 hover:text-red-300" data-name="${name}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                contactsList.appendChild(contactCard);
+            }
+
+            // Add event listeners to action buttons
+            document.querySelectorAll('.edit-contact').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const contactName = e.currentTarget.getAttribute('data-name');
+                    editContact(contactName);
+                });
+            });
+
+            document.querySelectorAll('.delete-contact').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const contactName = e.currentTarget.getAttribute('data-name');
+                    deleteContact(contactName);
+                });
+            });
+        }
+
+        // Load spam alerts
+        async function loadSpamAlerts() {
+            try {
+                const response = await fetch('/api/spam-alerts');
+                const data = await response.json();
+                const alerts = data.alerts || [];
+
+                spamAlertsContainer.innerHTML = alerts.map(alert => `
+            <div class="bg-gray-800 rounded-lg p-4 mb-3 animate-fade-in">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="font-bold">${alert.username}</span>
+                    <span class="text-sm opacity-75">${new Date(alert.timestamp).toLocaleString()}</span>
+                </div>
+                <p class="mb-3 text-gray-300">${alert.message}</p>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs">Confidence: ${Math.round(alert.confidence * 100)}%</span>
+                    <button onclick="blockSpammer('${alert.user_id}', '${alert.username}')" 
+                            class="px-2 py-1 bg-red-600 text-xs rounded hover:bg-red-500">
+                        Block User
+                    </button>
+                </div>
+            </div>
+        `).join('');
+            } catch (error) {
+                console.error("Failed to load spam alerts:", error);
+                spamAlertsContainer.innerHTML = `
+                    <div class="text-center py-8 text-red-400">
+                        <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                        <p>Failed to load spam alerts</p>
+                    </div>
+                `;
+            }
+        }
+
+
+
+
+        async function handleChannelSearch(query) {
+            const searchId = `search-${Date.now()}`;
+            const loadingMsg = document.createElement('div');
+            loadingMsg.id = searchId;
+            loadingMsg.className = 'message-bubble ai-message p-4 text-white';
+            loadingMsg.innerHTML = `
+        <div class="flex items-start">
+            <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
+                <i class="fas fa-search text-blue-400"></i>
+            </div>
+            <div>
+                <div class="font-bold text-blue-300 mb-1">Searching</div>
+                <p>Looking for "${query}"...</p>
+                <div class="typing-indicator mt-2">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>`;
+            chatContainer.appendChild(loadingMsg);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const response = await fetch('/api/search-channels', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    throw new Error("Invalid server response");
+                }
+
+                if (!response.ok || data.status === "error") {
+                    throw new Error(data.detail || 'Search failed');
+                }
+
+                // Remove loading message
+                chatContainer.removeChild(loadingMsg);
+
+                // Display results
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-bubble ai-message p-4 text-white';
+
+                let html = `
+            <div class="flex items-start">
+                <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
+                    <i class="fas fa-robot text-blue-400"></i>
+                </div>
+                <div>
+                    <div class="font-bold text-blue-300 mb-1">Channel Results</div>
+                    <p>${data.response}</p>`;
+
+                if (data.channels?.length > 0) {
+                    html += `<div class="mt-3 space-y-3">`;
+                    data.channels.forEach(channel => {
+                        html += `
+                    <div class="channel-result bg-gray-800 rounded-lg p-3 border border-gray-700">
+                        <a href="${channel.url}" target="_blank" 
+                           class="text-blue-400 hover:text-blue-300 font-medium flex items-center">
+                            <i class="fas fa-external-link-alt mr-2"></i>
+                            ${channel.name}
+                        </a>
+                        ${channel.snippet ? `
+                        <div class="text-sm text-gray-400 mt-1">
+                            ${channel.snippet}
+                        </div>` : ''}
+                        <button onclick="copyToClipboard('${channel.url}')" 
+                                class="mt-2 text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded">
+                            <i class="fas fa-copy mr-1"></i> Copy Link
+                        </button>
+                    </div>`;
+                    });
+                    html += `</div>`;
+                }
+
+                messageDiv.innerHTML = html + `</div></div>`;
+                chatContainer.appendChild(messageDiv);
+
+            } catch (error) {
+                // Update loading message with error
+                loadingMsg.innerHTML = `
+            <div class="flex items-start">
+                <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
+                    <i class="fas fa-exclamation-triangle text-red-400"></i>
+                </div>
+                <div>
+                    <div class="font-bold text-red-300 mb-1">Search Error</div>
+                    <p>${error.message}</p>
+                    <p class="text-sm text-gray-400 mt-2">
+                        <i class="fas fa-lightbulb mr-1"></i>
+                        Try different keywords or check back later
+                    </p>
+                </div>
+            </div>`;
+            } finally {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+
+        // Utility function to copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('Link copied to clipboard!');
+            });
+        }
+
+        // Show notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg animate-fade-in';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Block spammer
+        async function blockSpammer(userId, username) {
+            if (!confirm(`Block ${username} permanently?`)) return;
+
+            try {
+                const response = await fetch(`/api/block/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    await loadSpamAlerts();
+                    showNotification(`✅ Blocked ${username}`);
+                } else {
+                    throw new Error('Failed to block user');
+                }
+            } catch (error) {
+                showNotification(`❌ Error: ${error.message}`, "error");
+            }
+        }
+
+
+        // Add Error Handling for API Calls
+        async function fetchWithErrorHandling(url, options) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('API call failed:', error);
+                showNotification(`API Error: ${error.message}`, "error");
+                throw error;
+            }
+        }
+        // Show notification
+        function showNotification(message, type = "success") {
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg ${type === "success" ? "bg-green-600" : "bg-red-600"
+                } text-white animate-fade-in`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Show spam alert notification
+        function showSpamAlert(alert) {
+            const alertHtml = `
+                <div class="fixed bottom-4 right-4 w-80 bg-red-800 rounded-lg shadow-lg p-4 z-50 animate-fade-in">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-bold">⚠ Spam Detected</span>
+                        <span class="text-xs opacity-75">${new Date(alert.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    <p class="text-sm mb-2">@${alert.username}: ${alert.text}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs">Confidence: ${Math.round(alert.confidence * 100)}%</span>
+                        <button onclick="blockSpammer(${alert.user_id}, '@${alert.username}')" 
+                                class="px-2 py-1 bg-red-900 text-xs rounded hover:bg-red-700">
+                            Block
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', alertHtml);
+            setTimeout(() => {
+                const element = document.querySelector('.animate-fade-in');
+                if (element) element.remove();
+            }, 10000);
+        }
+
+        // Update spam counter
+        function updateSpamCounter(count) {
+            spamCounter.textContent = count;
+            spamIndicator.classList.toggle('hidden', count === 0);
+        }
+
+        // Show add contact modal
+        function showAddContactModal() {
+            currentContact = null;
+            contactModalTitle.textContent = "Add New Contact";
+            contactNameInput.value = '';
+            telegramIdInput.value = '';
+            contactFavoriteInput.checked = false;
+            contactNotesInput.value = '';
+            contactModal.classList.remove('hidden');
+            contactNameInput.focus();
+        }
+
+        // Show edit contact modal
+        async function editContact(contactName) {
+            try {
+                const response = await fetch(`/api/contacts/${encodeURIComponent(contactName)}`);
+                if (!response.ok) throw new Error('Failed to load contact');
+
+                currentContact = await response.json();
+                contactModalTitle.textContent = "Edit Contact";
+                contactNameInput.value = currentContact.name;
+                telegramIdInput.value = currentContact.telegram_id;
+                contactFavoriteInput.checked = currentContact.is_favorite || false;
+                contactNotesInput.value = currentContact.notes || '';
+                contactModal.classList.remove('hidden');
+                contactNameInput.focus();
+            } catch (error) {
+                console.error('Error editing contact:', error);
+                addMessage('assistant', `Error editing contact: ${error.message}`);
+            }
+        }
+
+        // Save contact (add or update)
+        async function saveContact() {
+            const name = contactNameInput.value.trim();
+            const telegramId = telegramIdInput.value.trim();
+            const isFavorite = contactFavoriteInput.checked;
+            const notes = contactNotesInput.value.trim();
+
+            if (!name || !telegramId) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            try {
+                const contactData = {
+                    name: name,
+                    telegram_id: telegramId,
+                    is_favorite: isFavorite,
+                    notes: notes
+                };
+
+                let response;
+                if (currentContact) {
+                    // Update existing contact
+                    response = await fetch(`/api/contacts/${encodeURIComponent(currentContact.name)}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(contactData)
+                    });
+                } else {
+                    // Add new contact
+                    response = await fetch('/api/contacts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(contactData)
+                    });
+                }
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to save contact');
+                }
+
+                contactModal.classList.add('hidden');
+                await loadContacts();
+                addMessage('assistant', `✅ Contact ${name} saved successfully!`);
+            } catch (error) {
+                console.error('Error saving contact:', error);
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Delete contact
+        async function deleteContact(contactName) {
+            if (!confirm(`Are you sure you want to delete "${contactName}"? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/contacts/${encodeURIComponent(contactName)}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete contact');
+                }
+
+                await loadContacts();
+                addMessage('assistant', `✅ Contact ${contactName} deleted successfully!`);
+            } catch (error) {
+                console.error('Error deleting contact:', error);
+                addMessage('assistant', `Error deleting contact: ${error.message}`);
+            }
+        }
+
+        // Search contacts
+        function searchContacts() {
+            const searchTerm = contactsSearch.value.toLowerCase();
+            if (!searchTerm) {
+                renderContacts(allContacts);
+                return;
+            }
+
+            const filteredContacts = Object.fromEntries(
+                Object.entries(allContacts).filter(([name, contact]) =>
+                    name.toLowerCase().includes(searchTerm) ||
+                    contact.telegram_id.toLowerCase().includes(searchTerm) ||
+                    (contact.notes && contact.notes.toLowerCase().includes(searchTerm)))
+            );
+
+            renderContacts(filteredContacts);
+        }
+
+        // Send message to backend
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Check if this is a channel search request
+            if (message.toLowerCase().includes('find channel to download')) {
+                const query = message.replace(/find channel to download/gi, '').trim();
+                if (query) {
+                    addMessage('user', message);
+                    messageInput.value = '';
+                    await handleChannelSearch(query);
+                    return;
+                }
+            }
+
+            addMessage('user', message);
+            messageInput.value = '';
+
+            typingIndicator.classList.remove('hidden');
+            statusText.textContent = 'Telegram AI is processing...';
+
+            try {
+                const response = await fetch('/api/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        user_id: "current_user_id"  // Replace with actual user auth
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(await response.text());
+                }
+
+                const data = await response.json();
+
+                // Update chat history
+                chatHistory.push(
+                    { role: 'user', content: message },
+                    { role: 'assistant', content: data.content }
+                );
+
+                // Show response
+                addMessage(
+                    'assistant',
+                    data.content,
+                    data.type === 'send_result'
+                );
+
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('assistant', `Error: ${error.message}`);
+            } finally {
+                typingIndicator.classList.add('hidden');
+                statusText.textContent = 'Telegram AI is ready to assist';
+            }
+        }
+
+
+        function toggleSpeechRecognition() {
+            if (!recognition) {
+                showNotification("Speech recognition not supported in your browser", "error");
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                document.getElementById('mic-button').classList.remove('listening');
+                document.getElementById('status-text').textContent = "Telegram AI is ready to assist";
+            } else {
+                try {
+                    recognition.start();
+                    isListening = true;
+                    document.getElementById('mic-button').classList.add('listening');
+                    document.getElementById('status-text').textContent = "Starting microphone...";
+                } catch (error) {
+                    console.error('Speech recognition error:', error);
+                    showNotification("Error accessing microphone: " + error.message, "error");
+                }
+            }
+        }
+
+        // Initialize WebSocket for spam alerts
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const spamSocket = new WebSocket(`${protocol}${window.location.host}/ws`);
+
+            spamSocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.event === 'new_spam') {  // Match backend event type
+                    showSpamAlert(data.data);     // Match backend data structure
+                    updateSpamCounter(getSpamAlerts().length);
+                } else if (data.event === 'user_blocked') {
+                    showNotification(`User ${data.data.user_id} blocked`);
+                }
+            };
+
+            spamSocket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            spamSocket.onclose = () => {
+                console.log('WebSocket connection closed');
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const refreshButton = document.getElementById('refresh-messages');
+
+            if (refreshButton) {
+                refreshButton.addEventListener('click', function () {
+                    // Add loading spin to the icon
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.classList.add('fa-spin');
+                    }
+
+                    // Disable button during reload to prevent multiple clicks
+                    this.disabled = true;
+
+                    // Add slight delay so user sees the spin before reload
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 200); // 200ms delay - enough to see the spin, but not too long
+                });
+            }
+        });
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set up navigation
+            chatsBtn.addEventListener('click', () => showView('chat'));
+            contactsBtn.addEventListener('click', () => showView('contacts'));
+            aiChatBtn.addEventListener('click', () => showView('ai-chat'));
+            spamAlertsBtn.addEventListener('click', () => showView('spam-alerts'));
+            // Add this with your other event listeners
+
+
+            document.getElementById('mic-button').addEventListener('click', toggleSpeechRecognition);
+
+            // Set up contact management
+            addContactBtn.addEventListener('click', showAddContactModal);
+            cancelContactBtn.addEventListener('click', () => contactModal.classList.add('hidden'));
+            saveContactBtn.addEventListener('click', saveContact);
+            contactsSearch.addEventListener('input', searchContacts);
+
+            // Set up spam alerts
+            refreshSpamAlertsBtn.addEventListener('click', loadSpamAlerts);
+
+            // Set up chat functionality
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Close modal when clicking outside
+            contactModal.addEventListener('click', (e) => {
+                if (e.target === contactModal) {
+                    contactModal.classList.add('hidden');
+                }
+            });
+            // Add this at the end of your DOMContentLoaded event listener
+            setupSpeechRecognition();
+
+            // Initialize WebSocket
+            initWebSocket();
+
+            // Show default view
+            showView('chat');
+        });
+
+        logoutBtn.addEventListener("click", async () => {
+            try {
+                const response = await fetch("http://localhost:8000/api/auth/logout", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message); // show success message
+                    // Optionally redirect to login page
+                    window.location.href = "/";
+                } else {
+                    alert("Logout failed: " + result.detail);
+                }
+            } catch (error) {
+                console.error("Error logging out:", error);
+                alert("Something went wrong while logging out.");
+            }
+        });
+    </script>
+</body>
+
+</html>
