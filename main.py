@@ -713,12 +713,23 @@ async def logout():
             await telegram_client.log_out()
             await telegram_client.disconnect()
 
-        # Remove the session file
+        # Remove session file
         session_file = os.getenv("SESSION_FILE")
         if session_file and os.path.exists(session_file):
             os.remove(session_file)
-        
-        return {"status": "success", "message": "Logged out successfully and deleted all data."}
+
+        # Remove user-related files
+        user_files = [
+            "contacts.json",
+            "chat_history.json",
+            "spammers.db",
+            "telegram_messages.db"
+        ]
+        for f in user_files:
+            if os.path.exists(f):
+                os.remove(f)
+
+        return {"status": "success", "message": "Logged out and cleared all user data"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Logout failed: {str(e)}")
 
