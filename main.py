@@ -289,7 +289,7 @@ async def telegram_websocket(websocket: WebSocket):
     
     try:
         # Send recent messages to newly connected client
-        recent_messages = telegram_handler.get_recent_messages(50)
+        recent_messages = telegram_handler.get_recent_messages(10)
         await websocket.send_text(json.dumps({
             'type': 'message_history',
             'messages': [
@@ -347,29 +347,42 @@ async def telegram_websocket(websocket: WebSocket):
                             'type': 'error',
                             'message': f'Failed to send reply: {str(e)}'
                         }))
-            
             # Handle regenerate AI reply action
             elif message_data.get('action') == 'regenerate_ai':
-                message_id = int(message_data.get('message_id'))
-                if message_id in telegram_handler.pending_messages:
-                    pending = telegram_handler.pending_messages[message_id]
+                message_text = message_data.get('message_text')
+                sender_name = message_data.get('sender_name')
+                sender_id = message_data.get('sender_id')
 
-                    # Generate new AI reply
+                if not message_text or not sender_name or not sender_id:
+                    await websocket.send_text(json.dumps({
+                        "type": "error",
+                        "message": "Missing parameters for regenerate_ai (message_text, sender_name, sender_id required)"
+                    }))
+                    continue
+
+                try:
+                    # Generate new AI reply without using message_id
                     new_ai_reply = await telegram_handler.generate_ai_reply(
-                        pending['message'],
-                        pending['sender_name'],
-                        pending['sender_id']
+                        message_text,
+                        sender_name,
+                        sender_id
                     )
-                    
-                    # Update the stored reply
-                    telegram_handler.pending_messages[message_id]['ai_reply'] = new_ai_reply
 
-                    # Send the updated reply to the client
+                    # Send the updated reply back to client
                     await websocket.send_text(json.dumps({
                         'type': 'ai_reply_updated',
-                        'message_id': message_id,
+                        'message_text': message_text,
+                        'sender_name': sender_name,
+                        'sender_id': sender_id,
                         'ai_reply': new_ai_reply
                     }))
+
+                except Exception as e:
+                    await websocket.send_text(json.dumps({
+                        "type": "error",
+                        "message": f"Failed to regenerate AI reply: {str(e)}"
+                    }))
+
             
     except WebSocketDisconnect:
         manager.disconnect(websocket)
