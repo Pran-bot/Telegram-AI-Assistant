@@ -46,7 +46,7 @@ class ChannelSearch:
                     "role": "user",
                     "content": f"I searched for '{query}' on Telegram. Generate a helpful response about these channels: {channels}"
                 }],
-                model="llama3-70b-8192",
+                model="llama-3.3-70b-versatile",
                 temperature=0.7
             )
             
