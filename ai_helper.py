@@ -25,7 +25,7 @@ async def generate_ai_response(prompt, history=None):
         
         completion = client.chat.completions.create(
             messages=messages,
-            model="llama3-70b-8192"
+            model="llama-3.3-70b-versatile"
         )
         return completion.choices[0].message.content
     except Exception as e:
